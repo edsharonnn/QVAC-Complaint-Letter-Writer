@@ -5,10 +5,22 @@
 
 import { completion } from "@qvac/sdk";
 
+// Testing found two distinct failure modes the original checks missed:
+// (1) the model stopping after just a subject line (short but well-formed,
+// caught below by a minimum word count), and (2) the model misreading the
+// situation as a factual claim it must verify and replying with something
+// like "I do not have information or evidence that..." instead of writing
+// the letter — evasive, not empty, and not covered by the original
+// refusal-phrase list.
 function looksUnusable(text) {
   if (!text || text.trim().length === 0) return true;
   if (text.length > 800) return true;
-  const bad = ["i cannot", "i can't", "as an ai", "i'm not able"];
+  if (text.trim().split(/\s+/).length < 20) return true;
+  const bad = [
+    "i cannot", "i can't", "as an ai", "i'm not able",
+    "i do not have", "i don't have", "no evidence", "cannot confirm",
+    "not able to confirm",
+  ];
   const lower = text.toLowerCase();
   return bad.some((phrase) => lower.includes(phrase));
 }
